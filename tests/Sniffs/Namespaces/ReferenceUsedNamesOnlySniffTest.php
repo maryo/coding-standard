@@ -1259,4 +1259,46 @@ class ReferenceUsedNamesOnlySniffTest extends TestCase
 		self::assertNoSniffErrorInFile($report);
 	}
 
+	public function testReferencingWithoutRequiredAlias(): void
+	{
+		$report = self::checkFile(__DIR__ . '/data/referenceUsedNamesOnlyWithoutRequiredAlias.php', [
+			'namespaceAliasesRequiredToUse' => [
+				'Symfony\Component\Validator\Constraints' => 'Assert',
+			],
+		]);
+
+		self::assertSame(5, $report->getErrorCount());
+
+		self::assertSniffError(
+			$report,
+			14,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via a partial use statement as Assert\NotNull',
+		);
+		self::assertSniffError(
+			$report,
+			17,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via a partial use statement as Assert\NotNull',
+		);
+		self::assertSniffError(
+			$report,
+			20,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via a partial use statement as Assert\NotNull',
+		);
+		self::assertSniffError(
+			$report,
+			23,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\Foo\Bar should be referenced via a partial use statement as Assert\Foo\Bar',
+		);
+		self::assertSniffError(
+			$report,
+			26,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\Foo\Bar should be referenced via a partial use statement as Assert\Foo\Bar',
+		);
+	}
+
 }

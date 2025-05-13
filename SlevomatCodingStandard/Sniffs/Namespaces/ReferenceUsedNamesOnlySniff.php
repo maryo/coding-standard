@@ -28,7 +28,9 @@ use stdClass;
 use function array_filter;
 use function array_flip;
 use function array_key_exists;
+use function array_keys;
 use function array_map;
+use function array_merge;
 use function array_reduce;
 use function array_values;
 use function count;
@@ -38,9 +40,14 @@ use function in_array;
 use function preg_quote;
 use function preg_replace;
 use function sprintf;
+use function strcasecmp;
+use function strlen;
 use function strpos;
+use function strstr;
 use function strtolower;
 use function substr;
+use function substr_count;
+use function uksort;
 use const T_DECLARE;
 use const T_DOC_COMMENT_OPEN_TAG;
 use const T_NAMESPACE;
@@ -57,6 +64,8 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 	public const CODE_REFERENCE_VIA_FULLY_QUALIFIED_NAME_WITHOUT_NAMESPACE = 'ReferenceViaFullyQualifiedNameWithoutNamespace';
 
 	public const CODE_REFERENCE_VIA_FALLBACK_GLOBAL_NAME = 'ReferenceViaFallbackGlobalName';
+
+	public const CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS = 'ReferenceWithoutRequiredAlias';
 
 	public const CODE_PARTIAL_USE = 'PartialUse';
 
@@ -96,6 +105,9 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 	 */
 	public array $namespacesRequiredToUse = [];
 
+	/** @var array<string, string> */
+	public array $namespaceAliasesRequiredToUse = [];
+
 	public bool $allowFullyQualifiedNameForCollidingClasses = false;
 
 	public bool $allowFullyQualifiedNameForCollidingFunctions = false;
@@ -110,6 +122,9 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 
 	/** @var list<string>|null */
 	private ?array $normalizedNamespacesRequiredToUse = null;
+
+	/** @var array<string, string>|null */
+	private ?array $normalizedNamespaceAliasesRequiredToUse = null;
 
 	/**
 	 * @return array<int, (int|string)>
@@ -190,10 +205,12 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 			$collidingUseStatementUniqueId = UseStatement::getUniqueId($reference->type, $unqualifiedName);
 
 			$isPartialUse = false;
+			$partialUseStatement = null;
 			foreach ($useStatements as $useStatement) {
 				$useStatementName = $useStatement->getAlias() ?? $useStatement->getNameAsReferencedInFile();
 				if (strpos($name, $useStatementName . '\\') === 0) {
 					$isPartialUse = true;
+					$partialUseStatement = $useStatement;
 					break;
 				}
 			}
@@ -368,12 +385,35 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 						'isGlobalFunctionFallback' => $isGlobalFunctionFallback,
 					];
 				}
-			} elseif (!$this->allowPartialUses) {
-				if (NamespaceHelper::isQualifiedName($name)) {
-					$phpcsFile->addError(sprintf(
-						'Partial use statements are not allowed, but referencing %s found.',
-						$name,
-					), $startPointer, self::CODE_PARTIAL_USE);
+			} elseif (NamespaceHelper::isQualifiedName($name)) {
+				$relativeName = strstr($name, NamespaceHelper::NAMESPACE_SEPARATOR);
+				$fullyQualifiedName = $partialUseStatement !== null
+					? $partialUseStatement->getFullyQualifiedTypeName() . $relativeName
+					: NamespaceHelper::findCurrentNamespaceName($phpcsFile, $startPointer) . $relativeName;
+				[$namespace, $requiredAlias] = $this->getRequiredNamespaceAliasForName($fullyQualifiedName);
+
+				if ($requiredAlias !== null) {
+					/** @var string $alias */
+					$alias = strstr($name, NamespaceHelper::NAMESPACE_SEPARATOR, true);
+
+					if (strcasecmp($alias, $requiredAlias) !== 0) {
+						$phpcsFile->addError(
+							sprintf(
+								'%s should be referenced via a partial use statement as %s\%s.',
+								$fullyQualifiedName,
+								$requiredAlias,
+								substr($fullyQualifiedName, strlen($namespace) + 1),
+							),
+							$startPointer,
+							self::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+						);
+					}
+				} elseif (!$this->allowPartialUses) {
+					$phpcsFile->addError(
+						sprintf('Partial use statements are not allowed, but referencing %s found.', $name),
+						$startPointer,
+						self::CODE_PARTIAL_USE,
+					);
 				}
 			}
 		}
@@ -444,6 +484,23 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 
 				$canBeFixed = false;
 				break;
+			}
+
+			[$namespace, $requiredAlias] = $this->getRequiredNamespaceAliasForName($canonicalName);
+
+			if ($requiredAlias !== null) {
+				$phpcsFile->addError(
+					sprintf(
+						'%s should be referenced via a partial use statement as %s\%s.',
+						$canonicalName,
+						$requiredAlias,
+						substr($canonicalName, strlen($namespace) + 1),
+					),
+					$startPointer,
+					self::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+				);
+
+				continue;
 			}
 
 			$label = sprintf(
@@ -584,10 +641,36 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 	private function getNamespacesRequiredToUse(): array
 	{
 		if ($this->normalizedNamespacesRequiredToUse === null) {
-			$this->normalizedNamespacesRequiredToUse = SniffSettingsHelper::normalizeArray($this->namespacesRequiredToUse);
+			$this->normalizedNamespacesRequiredToUse = array_map(
+				'strtolower',
+				SniffSettingsHelper::normalizeArray($this->namespacesRequiredToUse),
+			);
 		}
 
 		return $this->normalizedNamespacesRequiredToUse;
+	}
+
+	/**
+	 * @return array<string, string>
+	 */
+	private function getNamespaceAliasesRequiredToUse(): array
+	{
+		if ($this->normalizedNamespaceAliasesRequiredToUse === null) {
+			$namespaceAliasesRequiredToUse = SniffSettingsHelper::normalizeAssociativeArray($this->namespaceAliasesRequiredToUse);
+			$this->normalizedNamespaceAliasesRequiredToUse = [];
+
+			foreach ($namespaceAliasesRequiredToUse as $namespace => $alias) {
+				$namespace = strtolower(NamespaceHelper::normalizeToCanonicalName((string) $namespace));
+				$this->normalizedNamespaceAliasesRequiredToUse[$namespace] = (string) $alias;
+			}
+
+			uksort(
+				$this->normalizedNamespaceAliasesRequiredToUse,
+				static fn (string $a, string $b) => substr_count($b, '\\') <=> substr_count($a, '\\'),
+			);
+		}
+
+		return $this->normalizedNamespaceAliasesRequiredToUse;
 	}
 
 	/**
@@ -652,12 +735,16 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 			return true;
 		}
 
-		foreach ($this->getNamespacesRequiredToUse() as $namespace) {
-			if (!NamespaceHelper::isTypeInNamespace($name, $namespace)) {
-				continue;
-			}
+		$namespacesRequiredToUse = array_merge(
+			$this->getNamespacesRequiredToUse(),
+			array_keys($this->getNamespaceAliasesRequiredToUse()),
+		);
+		$lowercasedName = strtolower($name);
 
-			return true;
+		foreach ($namespacesRequiredToUse as $namespace) {
+			if (NamespaceHelper::isTypeInNamespace($lowercasedName, $namespace)) {
+				return true;
+			}
 		}
 
 		return false;
@@ -771,6 +858,22 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 		}
 
 		return $references;
+	}
+
+	/**
+	 * @return array{string|null, string|null}
+	 */
+	private function getRequiredNamespaceAliasForName(string $fullyQualifiedName): array
+	{
+		$lowercasedFullyQualifiedName = strtolower($fullyQualifiedName);
+
+		foreach ($this->getNamespaceAliasesRequiredToUse() as $namespace => $alias) {
+			if (NamespaceHelper::isTypeInNamespace($lowercasedFullyQualifiedName, $namespace)) {
+				return [$namespace, $alias];
+			}
+		}
+
+		return [null, null];
 	}
 
 }
