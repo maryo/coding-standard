@@ -1259,4 +1259,104 @@ class ReferenceUsedNamesOnlySniffTest extends TestCase
 		self::assertNoSniffErrorInFile($report);
 	}
 
+	public function testReferencingWithoutRequiredAlias(): void
+	{
+		$report = self::checkFile(__DIR__ . '/data/referenceUsedNamesOnlyWithoutRequiredAlias.php', [
+			'requiredAliases' => [
+				'Symfony\Component\Validator\Constraints' => 'Assert',
+				'Dibi\Exception' => 'DibiException',
+				'My\func' => 'my_function',
+				'My\CONSTANT' => 'MY_CONSTANT',
+			],
+		]);
+
+		self::assertSame(14, $report->getErrorCount());
+
+		self::assertSniffError(
+			$report,
+			23,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via alias as Assert\NotNull.',
+		);
+		self::assertSniffError(
+			$report,
+			26,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via alias as Assert\NotNull.',
+		);
+		self::assertSniffError(
+			$report,
+			29,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via alias as Assert\NotNull.',
+		);
+		self::assertSniffError(
+			$report,
+			32,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\Foo\Bar should be referenced via alias as Assert\Foo\Bar.',
+		);
+		self::assertSniffError(
+			$report,
+			35,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\Foo\Bar should be referenced via alias as Assert\Foo\Bar.',
+		);
+		self::assertSniffError(
+			$report,
+			38,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via alias as Assert\NotNull.',
+		);
+		self::assertSniffError(
+			$report,
+			41,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Symfony\Component\Validator\Constraints\NotNull should be referenced via alias as Assert\NotNull.',
+		);
+		self::assertSniffError(
+			$report,
+			46,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Dibi\Exception should be referenced via alias as DibiException.',
+		);
+		self::assertSniffError(
+			$report,
+			47,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Dibi\Exception should be referenced via alias as DibiException.',
+		);
+		self::assertSniffError(
+			$report,
+			48,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'Dibi\Exception should be referenced via alias as DibiException.',
+		);
+
+		self::assertSniffError(
+			$report,
+			50,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'My\func should be referenced via alias as my_function.',
+		);
+		self::assertSniffError(
+			$report,
+			51,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'My\func should be referenced via alias as my_function.',
+		);
+		self::assertSniffError(
+			$report,
+			54,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'My\CONSTANT should be referenced via alias as MY_CONSTANT.',
+		);
+		self::assertSniffError(
+			$report,
+			55,
+			ReferenceUsedNamesOnlySniff::CODE_REFERENCE_WITHOUT_REQUIRED_ALIAS,
+			'My\CONSTANT should be referenced via alias as MY_CONSTANT.',
+		);
+	}
+
 }

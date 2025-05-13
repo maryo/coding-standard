@@ -119,6 +119,7 @@ Sniff provides the following settings:
 
 * `searchAnnotations` (default: `false`): enables searching for mentions in annotations.
 * `namespacesRequiredToUse`: if not set, all namespaces are required to be used. When set, only mentioned namespaces are required to be used. Useful in tandem with UseOnlyWhitelistedNamespaces sniff.
+* `requiredAliases`: require certain names to always use the same alias.
 * `allowFullyQualifiedExceptions`, `specialExceptionNames` & `ignoredNames`: allows fully qualified exceptions. Useful in tandem with FullyQualifiedExceptions sniff.
 * `allowFullyQualifiedNameForCollidingClasses`: allow fully qualified name for a class with a colliding use statement.
 * `allowFullyQualifiedNameForCollidingFunctions`: allow fully qualified name for a function with a colliding use statement.
