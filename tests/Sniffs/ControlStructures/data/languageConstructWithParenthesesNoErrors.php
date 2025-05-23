@@ -52,3 +52,5 @@ die(0);
 die('Error');
 exit(0);
 exit('Error');
+
+clone new stdClass();

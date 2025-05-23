@@ -70,6 +70,8 @@ $remotedAddresses = [
 	(new RemoteAddress()),
 ];
 
+clone(new stdClass());
+
 function () {
 	return [
 		'a' => ('aa' . 'bb'),

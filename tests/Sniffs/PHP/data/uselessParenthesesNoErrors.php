@@ -182,6 +182,8 @@ $ip = (new RemoteAddress())?->getIpAddress();
 
 echo ~(1 - 1);
 
+clone(new stdClass());
+
 // Must be last
 return true
 	? 100
