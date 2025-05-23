@@ -163,6 +163,7 @@ class UselessParenthesesSniff implements Sniff
 				T_UNSET_CAST,
 				T_MATCH,
 				T_BITWISE_NOT,
+				T_CLONE,
 			],
 		), true)
 		) {

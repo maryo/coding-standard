@@ -44,3 +44,5 @@ function booo()
 if (include_once __FILE__) {
     echo 'OK', PHP_EOL;
 }
+
+clone new stdClass();
