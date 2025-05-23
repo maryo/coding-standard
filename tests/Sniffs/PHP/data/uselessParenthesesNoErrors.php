@@ -181,6 +181,8 @@ doSomething((new Response()));
 
 echo ~(1 - 1);
 
+clone(new stdClass());
+
 // Must be last
 return true
 	? 100

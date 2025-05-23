@@ -21,7 +21,7 @@ class LanguageConstructWithParenthesesSniffTest extends TestCase
 			[LanguageConstructWithParenthesesSniff::CODE_USED_WITH_PARENTHESES],
 		);
 
-		self::assertSame(15, $report->getErrorCount());
+		self::assertSame(16, $report->getErrorCount());
 
 		self::assertSniffError(
 			$report,
@@ -112,6 +112,12 @@ class LanguageConstructWithParenthesesSniffTest extends TestCase
 			44,
 			LanguageConstructWithParenthesesSniff::CODE_USED_WITH_PARENTHESES,
 			'Usage of language construct "include_once" with parentheses is disallowed.',
+		);
+		self::assertSniffError(
+			$report,
+			48,
+			LanguageConstructWithParenthesesSniff::CODE_USED_WITH_PARENTHESES,
+			'Usage of language construct "clone" with parentheses is disallowed.',
 		);
 
 		self::assertAllFixedInFile($report);

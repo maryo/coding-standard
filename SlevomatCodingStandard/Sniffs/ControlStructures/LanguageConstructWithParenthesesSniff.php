@@ -9,6 +9,7 @@ use SlevomatCodingStandard\Helpers\TokenHelper;
 use function in_array;
 use function sprintf;
 use const T_BREAK;
+use const T_CLONE;
 use const T_CLOSE_PARENTHESIS;
 use const T_CLOSE_SHORT_ARRAY;
 use const T_CONTINUE;
@@ -51,6 +52,7 @@ class LanguageConstructWithParenthesesSniff implements Sniff
 			T_THROW,
 			T_YIELD,
 			T_YIELD_FROM,
+			T_CLONE,
 		];
 	}
 
