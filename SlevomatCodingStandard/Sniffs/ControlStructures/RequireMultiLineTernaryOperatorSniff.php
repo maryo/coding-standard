@@ -7,10 +7,10 @@ use PHP_CodeSniffer\Sniffs\Sniff;
 use SlevomatCodingStandard\Helpers\FixerHelper;
 use SlevomatCodingStandard\Helpers\IndentationHelper;
 use SlevomatCodingStandard\Helpers\SniffSettingsHelper;
+use SlevomatCodingStandard\Helpers\StringHelper;
 use SlevomatCodingStandard\Helpers\TernaryOperatorHelper;
 use SlevomatCodingStandard\Helpers\TokenHelper;
 use function in_array;
-use function strlen;
 use function substr;
 use const T_INLINE_ELSE;
 use const T_INLINE_THEN;
@@ -69,13 +69,19 @@ class RequireMultiLineTernaryOperatorSniff implements Sniff
 
 		$endOfLineBeforeInlineThenPointer = $this->getEndOfLineBefore($phpcsFile, $inlineThenPointer);
 
-		$actualLineLength = strlen(TokenHelper::getContent($phpcsFile, $endOfLineBeforeInlineThenPointer + 1, $pointerAfterInlineElseEnd));
+		$actualLineLength = StringHelper::length(
+			TokenHelper::getContent($phpcsFile, $endOfLineBeforeInlineThenPointer + 1, $pointerAfterInlineElseEnd),
+			$phpcsFile->config->encoding,
+		);
 
 		if ($actualLineLength <= $this->lineLengthLimit) {
 			return;
 		}
 
-		$expressionsLength = strlen(TokenHelper::getContent($phpcsFile, $inlineThenPointer + 1, $pointerAfterInlineElseEnd - 1));
+		$expressionsLength = StringHelper::length(
+			TokenHelper::getContent($phpcsFile, $inlineThenPointer + 1, $pointerAfterInlineElseEnd - 1),
+			$phpcsFile->config->encoding,
+		);
 
 		if (
 			$this->minExpressionsLength !== null

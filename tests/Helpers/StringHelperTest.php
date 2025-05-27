@@ -135,4 +135,14 @@ class StringHelperTest extends TestCase
 		self::assertFalse(StringHelper::endsWith($haystack, $needle));
 	}
 
+	public function testStringLength(): void
+	{
+		self::assertSame(0, StringHelper::length('', 'utf-8'));
+		self::assertSame(0, StringHelper::length(''));
+		self::assertSame(20, StringHelper::length('iñtërnâtiônàlizætiøn', 'utf-8'));
+		self::assertSame(27, StringHelper::length('iñtërnâtiônàlizætiøn'));
+		self::assertSame(27, StringHelper::length('iñtërnâtiônàlizætiøn', 'unknown'));
+		self::assertSame(29, StringHelper::length("iñtërnâtiônàlizætiøn\xC1\xBF", 'utf-8'));
+	}
+
 }
