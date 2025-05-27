@@ -95,8 +95,11 @@ abstract class AbstractLineCall implements Sniff
 	protected function getLineEnd(File $phpcsFile, int $pointer): string
 	{
 		$firstPointerOnNextLine = TokenHelper::findFirstTokenOnNextLine($phpcsFile, $pointer);
+		$endPointer = $firstPointerOnNextLine !== null
+			? $firstPointerOnNextLine - 1
+			: TokenHelper::getLastTokenPointer($phpcsFile);
 
-		return rtrim(TokenHelper::getContent($phpcsFile, $pointer, $firstPointerOnNextLine - 1));
+		return rtrim(TokenHelper::getContent($phpcsFile, $pointer, $endPointer));
 	}
 
 }

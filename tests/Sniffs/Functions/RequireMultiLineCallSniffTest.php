@@ -17,7 +17,7 @@ class RequireMultiLineCallSniffTest extends TestCase
 	{
 		$report = self::checkFile(__DIR__ . '/data/requireMultiLineCallErrors.php');
 
-		self::assertSame(15, $report->getErrorCount());
+		self::assertSame(16, $report->getErrorCount());
 
 		self::assertSniffError(
 			$report,

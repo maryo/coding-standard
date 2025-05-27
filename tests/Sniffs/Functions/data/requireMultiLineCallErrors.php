@@ -51,4 +51,5 @@ function ($text) {
 	return sprintf(_('very looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong parameter'), $text);
 };
 
-$a = _('very loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong parameter');
+$a = _('very loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong parameter');
+strlen('Příliš žluťoučký kůň úpěl ďábelské ódy v žáru noci, když déšť stékal po listech stromů a vítr foukal a foukal.');
