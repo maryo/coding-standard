@@ -38,3 +38,5 @@ $array = array_merge([], array_map(function (): string {
 $array = array_map(['a loooooooooooooooooong value that exactly fits into the line length limit'], function (): string {
 	return 'foo';
 });
+
+strlen('Příliš žluťoučký kůň úpěl ďábelské ódy v žáru noci, když déšť stékal po listech stromů a vítr vál v korunách.');

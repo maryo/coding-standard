@@ -8,12 +8,12 @@ use SlevomatCodingStandard\Helpers\FixerHelper;
 use SlevomatCodingStandard\Helpers\FunctionHelper;
 use SlevomatCodingStandard\Helpers\IndentationHelper;
 use SlevomatCodingStandard\Helpers\SniffSettingsHelper;
+use SlevomatCodingStandard\Helpers\StringHelper;
 use SlevomatCodingStandard\Helpers\TokenHelper;
 use UnexpectedValueException;
 use function count;
 use function preg_match;
 use function sprintf;
-use function strlen;
 use const T_COMMA;
 
 class RequireMultiLineMethodSignatureSniff extends AbstractMethodSignature
@@ -105,7 +105,10 @@ class RequireMultiLineMethodSignatureSniff extends AbstractMethodSignature
 		}
 
 		if (!$forceSplit) {
-			if ($this->minLineLength !== null && strlen($signature) < $this->minLineLength) {
+			if (
+				$this->minLineLength !== null
+				&& StringHelper::length($signature, $phpcsFile->config->encoding) < $this->minLineLength
+			) {
 				return;
 			}
 

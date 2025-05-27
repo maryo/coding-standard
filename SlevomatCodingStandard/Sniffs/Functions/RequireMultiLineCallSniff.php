@@ -7,6 +7,7 @@ use PHP_CodeSniffer\Files\File;
 use SlevomatCodingStandard\Helpers\FixerHelper;
 use SlevomatCodingStandard\Helpers\IndentationHelper;
 use SlevomatCodingStandard\Helpers\SniffSettingsHelper;
+use SlevomatCodingStandard\Helpers\StringHelper;
 use SlevomatCodingStandard\Helpers\TokenHelper;
 use UnexpectedValueException;
 use function array_unique;
@@ -123,10 +124,10 @@ class RequireMultiLineCallSniff extends AbstractLineCall
 		if ($tokens[$parenthesisCloserPointer]['line'] === $tokens[$stringPointer]['line']) {
 			$call = $this->getCall($phpcsFile, $parenthesisOpenerPointer, $parenthesisCloserPointer);
 			$lineEnd = $this->getLineEnd($phpcsFile, $parenthesisCloserPointer);
-			$lineLength = strlen($lineStart . $call . $lineEnd);
+			$lineLength = StringHelper::length($lineStart . $call . $lineEnd, $phpcsFile->config->encoding);
 		} else {
 			$lineEnd = $this->getLineEnd($phpcsFile, $parenthesisOpenerPointer + 1);
-			$lineLength = strlen($lineStart . $lineEnd);
+			$lineLength = StringHelper::length($lineStart . $lineEnd, $phpcsFile->config->encoding);
 		}
 
 		$firstNonWhitespaceOnLine = TokenHelper::findFirstNonWhitespaceOnLine($phpcsFile, $stringPointer);
@@ -134,6 +135,7 @@ class RequireMultiLineCallSniff extends AbstractLineCall
 		$oneIndentation = IndentationHelper::getOneIndentationLevel($phpcsFile);
 
 		if (!$this->shouldReportError(
+			$phpcsFile,
 			$lineLength,
 			$lineStart,
 			$lineEnd,
@@ -246,6 +248,7 @@ class RequireMultiLineCallSniff extends AbstractLineCall
 	}
 
 	private function shouldReportError(
+		File $phpcsFile,
 		int $lineLength,
 		string $lineStart,
 		string $lineEnd,
@@ -269,7 +272,7 @@ class RequireMultiLineCallSniff extends AbstractLineCall
 			return true;
 		}
 
-		return strlen(trim($lineStart) . trim($lineEnd)) > $indentationLength;
+		return StringHelper::length(trim($lineStart) . trim($lineEnd), $phpcsFile->config->encoding) > $indentationLength;
 	}
 
 	/**

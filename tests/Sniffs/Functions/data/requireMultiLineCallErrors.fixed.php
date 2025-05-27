@@ -99,5 +99,8 @@ function ($text) {
 };
 
 $a = _(
-	'very loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong parameter'
+	'very loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong parameter'
+);
+strlen(
+	'Příliš žluťoučký kůň úpěl ďábelské ódy v žáru noci, když déšť stékal po listech stromů a vítr foukal a foukal.'
 );
