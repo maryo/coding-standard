@@ -15,6 +15,8 @@ use function array_keys;
 use function array_merge;
 use function array_reverse;
 use function in_array;
+use function is_bool;
+use function ltrim;
 use function sprintf;
 use const T_AND_EQUAL;
 use const T_AS;
@@ -73,7 +75,8 @@ class UnusedVariableSniff implements Sniff
 
 	public const CODE_UNUSED_VARIABLE = 'UnusedVariable';
 
-	public bool $ignoreUnusedValuesWhenOnlyKeysAreUsedInForeach = false;
+	/** @var string|bool */
+	public $ignoreUnusedValuesWhenOnlyKeysAreUsedInForeach = false;
 
 	/**
 	 * @return array<int, (int|string)>
@@ -534,7 +537,13 @@ class UnusedVariableSniff implements Sniff
 			return false;
 		}
 
-		return $this->ignoreUnusedValuesWhenOnlyKeysAreUsedInForeach;
+		if (is_bool($this->ignoreUnusedValuesWhenOnlyKeysAreUsedInForeach)) {
+			return $this->ignoreUnusedValuesWhenOnlyKeysAreUsedInForeach;
+		}
+
+		$variableName = ltrim($tokens[$variablePointer]['content'], '$');
+
+		return $this->ignoreUnusedValuesWhenOnlyKeysAreUsedInForeach === $variableName;
 	}
 
 	private function isStaticOrGlobalVariable(File $phpcsFile, int $functionPointer, string $variableName): bool
