@@ -158,7 +158,13 @@ class TraitUseSpacingSniff implements Sniff
 			$lastUseEndPointer = $tokens[$lastUseEndPointer]['bracket_closer'];
 		}
 
-		$pointerAfterLastUse = TokenHelper::findNextEffective($phpcsFile, $lastUseEndPointer + 1);
+		$firstTokenOnLineAfterLastUse = TokenHelper::findFirstTokenOnNextLine($phpcsFile, $lastUseEndPointer);
+		$pointerAfterLastUse = TokenHelper::findNextEffective($phpcsFile, $lastUseEndPointer + 1, $firstTokenOnLineAfterLastUse);
+
+		if ($pointerAfterLastUse === null) {
+			$pointerAfterLastUse = TokenHelper::findNextNonWhitespace($phpcsFile, $firstTokenOnLineAfterLastUse);
+		}
+
 		$isAtTheEndOfClass = $tokens[$pointerAfterLastUse]['code'] === T_CLOSE_CURLY_BRACKET;
 
 		$whitespaceEnd = TokenHelper::findNextNonWhitespace($phpcsFile, $lastUseEndPointer + 1) - 1;
