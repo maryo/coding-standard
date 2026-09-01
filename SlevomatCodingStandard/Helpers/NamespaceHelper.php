@@ -18,6 +18,7 @@ use function sprintf;
 use function strcasecmp;
 use function strcmp;
 use function strpos;
+use function strtolower;
 use function trim;
 use const T_NAME_FULLY_QUALIFIED;
 use const T_NAMESPACE;
@@ -180,8 +181,8 @@ class NamespaceHelper
 	public static function isTypeInNamespace(string $typeName, string $namespace): bool
 	{
 		return StringHelper::startsWith(
-			self::normalizeToCanonicalName($typeName) . '\\',
-			$namespace . '\\',
+			strtolower(self::normalizeToCanonicalName($typeName)) . '\\',
+			strtolower($namespace) . '\\',
 		);
 	}
 
