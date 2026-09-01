@@ -42,6 +42,7 @@ use function in_array;
 use function preg_quote;
 use function preg_replace;
 use function sprintf;
+use function strcasecmp;
 use function strlen;
 use function strtolower;
 use function substr;
@@ -408,25 +409,43 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 						$constantFetchNode,
 					];
 				}
-			} elseif (
-				NamespaceHelper::isQualifiedName($name)
-				&& (
-					$partialUse !== null
-						? !$this->isPartialUseAllowed($partialUse)
-						: !$this->allowPartialUses
-				)
-			) {
-				$partialUseMessage = 'Partial use statements are not allowed';
-				$allowedNamespaces = $this->getNamespacesAllowedToUsePartially();
-				if ($allowedNamespaces !== []) {
-					$partialUseMessage .= sprintf(' except for %s', implode(', ', $this->formatPartialUseNamespaces($allowedNamespaces)));
-				}
+			} else {
+				$requiredPartialUseName = $this->getRequiredPartialUseName($phpcsFile, $reference, $partialUse);
 
-				$phpcsFile->addError(sprintf(
-					'%s, but referencing %s found.',
-					$partialUseMessage,
-					$name,
-				), $startPointer, self::CODE_PARTIAL_USE);
+				if ($requiredPartialUseName !== null) {
+					$phpcsFile->addError(
+						sprintf(
+							'%s should be referenced via partial use as %s, but referencing %s found.',
+							$this->resolveReferenceFullyQualifiedName($phpcsFile, $reference),
+							$requiredPartialUseName,
+							$name,
+						),
+						$startPointer,
+						self::CODE_PARTIAL_USE,
+					);
+				} elseif (
+					NamespaceHelper::isQualifiedName($name)
+					&& (
+						$partialUse !== null
+							? !$this->isPartialUseAllowed($partialUse)
+							: !$this->allowPartialUses
+					)
+				) {
+					$partialUseMessage = 'Partial use statements are not allowed';
+					$allowedNamespaces = $this->getNamespacesAllowedToUsePartially();
+					if ($allowedNamespaces !== []) {
+						$partialUseMessage .= sprintf(
+							' except for %s',
+							implode(', ', $this->formatPartialUseNamespaces($allowedNamespaces)),
+						);
+					}
+
+					$phpcsFile->addError(sprintf(
+						'%s, but referencing %s found.',
+						$partialUseMessage,
+						$name,
+					), $startPointer, self::CODE_PARTIAL_USE);
+				}
 			}
 		}
 
@@ -967,6 +986,60 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 		}
 
 		return $references;
+	}
+
+	private function resolveReferenceFullyQualifiedName(File $phpcsFile, ReferencedName $reference): string
+	{
+		$name = $reference->getNameAsReferencedInFile();
+
+		return NamespaceHelper::normalizeToCanonicalName(NamespaceHelper::resolveName(
+			$phpcsFile,
+			$name,
+			NamespaceHelper::isQualifiedName($name) ? ReferencedName::TYPE_CLASS : $reference->getType(),
+			$reference->getStartPointer(),
+		));
+	}
+
+	/**
+	 * Returns the name the reference should be written as, or null when it already follows the required partial use.
+	 *
+	 * @param array{namespace: string, usedName: string}|null $partialUse
+	 */
+	private function getRequiredPartialUseName(File $phpcsFile, ReferencedName $reference, ?array $partialUse): ?string
+	{
+		if ($this->namespacesRequiredToUsePartially === []) {
+			return null;
+		}
+
+		$fullyQualifiedName = $this->resolveReferenceFullyQualifiedName($phpcsFile, $reference);
+		$requiredPartialUse = $this->getRequiredPartialUse($fullyQualifiedName);
+
+		if ($requiredPartialUse === null || $this->isAnyAliasAcceptable($requiredPartialUse, $partialUse)) {
+			return null;
+		}
+
+		$partialUseName = $this->getPartialUseName($requiredPartialUse['namespace'], $requiredPartialUse['alias']);
+		$relativeName = substr($fullyQualifiedName, strlen($requiredPartialUse['namespace']) + 1);
+		$requiredName = $relativeName !== ''
+			? sprintf('%s\%s', $partialUseName, $relativeName)
+			: $partialUseName;
+
+		$canonicalName = NamespaceHelper::normalizeToCanonicalName($reference->getNameAsReferencedInFile());
+
+		return strcasecmp($canonicalName, $requiredName) === 0 ? null : $requiredName;
+	}
+
+	/**
+	 * When no concrete alias is required, referencing the namespace via any alias is acceptable.
+	 *
+	 * @param array{namespace: string, alias: string} $requiredPartialUse
+	 * @param array{namespace: string, usedName: string}|null $partialUse
+	 */
+	private function isAnyAliasAcceptable(array $requiredPartialUse, ?array $partialUse): bool
+	{
+		return $requiredPartialUse['alias'] === ''
+			&& $partialUse !== null
+			&& strcasecmp($partialUse['namespace'], $requiredPartialUse['namespace']) === 0;
 	}
 
 }
