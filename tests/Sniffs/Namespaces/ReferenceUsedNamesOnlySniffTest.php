@@ -1541,6 +1541,26 @@ class ReferenceUsedNamesOnlySniffTest extends TestCase
 		self::assertNoSniffErrorInFile($report);
 	}
 
+	public function testRequirePartialUsesAppliesOutsideNamespacesRequiredToUse(): void
+	{
+		$report = self::checkFile(
+			__DIR__ . '/data/referenceUsedNamesOnlyWithRequiredPartialUseOutsideNamespacesRequiredToUse.php',
+			[
+				'allowPartialUses' => false,
+				'namespacesRequiredToUse' => [
+					'Totally\Other',
+				],
+				'namespacesRequiredToUsePartially' => [
+					'Some\SubNamespace as SubNamespace',
+				],
+			],
+		);
+
+		self::assertSame(1, $report->getErrorCount());
+		self::assertSniffError($report, 10, ReferenceUsedNamesOnlySniff::CODE_REFERENCE_VIA_FULLY_QUALIFIED_NAME);
+		self::assertAllFixedInFile($report);
+	}
+
 	public function testRequirePartialUsesWithoutAliasAcceptsAnyAlias(): void
 	{
 		$report = self::checkFile(

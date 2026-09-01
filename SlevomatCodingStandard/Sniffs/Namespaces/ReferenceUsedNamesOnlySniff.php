@@ -32,6 +32,7 @@ use function array_flip;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
+use function array_merge;
 use function array_reduce;
 use function array_values;
 use function count;
@@ -796,18 +797,13 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 
 	private function isRequiredToBeUsed(string $name): bool
 	{
-		$canonicalName = NamespaceHelper::normalizeToCanonicalName($name);
+		$namespaces = array_merge(
+			$this->getNamespacesRequiredToUse(),
+			array_keys($this->getNamespacesRequiredToUsePartially()),
+		);
 
-		foreach ($this->getNamespacesRequiredToUse() as $namespace) {
+		foreach ($namespaces as $namespace) {
 			if (!NamespaceHelper::isTypeInNamespace($name, $namespace)) {
-				continue;
-			}
-
-			return true;
-		}
-
-		foreach (array_keys($this->getNamespacesRequiredToUsePartially()) as $namespace) {
-			if ($canonicalName !== $namespace) {
 				continue;
 			}
 
