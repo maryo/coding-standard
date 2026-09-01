@@ -57,6 +57,19 @@ class ReferenceThrowableOnlySniffTest extends TestCase
 		self::assertSniffError($report, 27, ReferenceThrowableOnlySniff::CODE_REFERENCED_GENERAL_EXCEPTION);
 	}
 
+	public function testNonFixableExceptionReference(): void
+	{
+		$report = self::checkFile(
+			__DIR__ . '/data/fixableExceptionReference.php',
+			['fixable' => false],
+			[ReferenceThrowableOnlySniff::CODE_REFERENCED_GENERAL_EXCEPTION],
+		);
+
+		self::assertSame(1, $report->getErrorCount());
+		self::assertSniffError($report, 19, ReferenceThrowableOnlySniff::CODE_REFERENCED_GENERAL_EXCEPTION);
+		self::assertSame(0, $report->getFixableCount());
+	}
+
 	public function testFixableExceptionReference(): void
 	{
 		$report = self::checkFile(

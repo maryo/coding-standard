@@ -30,6 +30,10 @@ This sniff forbids use of non-capturing catch introduced in PHP 8.0 [PHP RFC: no
 
 In PHP 7.0, a [`Throwable` interface was added](https://wiki.php.net/rfc/throwable-interface) that allows catching and handling errors in more cases than `Exception` previously allowed. So, if the catch statement contained `Exception` on PHP 5.x, it means it should probably be rewritten to reference `Throwable` on PHP 7.x. This sniff enforces that.
 
+Sniff provides the following settings:
+
+* `fixable` (default: `true`): allows the reference to be fixed automatically. Set it to `false` to only report the reference — `Throwable` also covers `Error`, so the replacement changes which types are handled.
+
 #### SlevomatCodingStandard.Exceptions.RequireNonCapturingCatch 🔧
 
 Sniff provides the following settings:
