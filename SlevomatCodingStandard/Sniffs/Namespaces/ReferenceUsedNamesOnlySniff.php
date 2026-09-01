@@ -844,7 +844,7 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 	{
 		foreach ($useStatements as $useStatement) {
 			$useStatementName = $useStatement->getAlias() ?? $useStatement->getNameAsReferencedInFile();
-			if (!StringHelper::startsWith($name, $useStatementName . '\\')) {
+			if (!StringHelper::startsWith(strtolower($name), strtolower($useStatementName) . '\\')) {
 				continue;
 			}
 
@@ -863,7 +863,7 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 	private function isPartialUseAllowed(array $partialUse): bool
 	{
 		foreach ($this->getNamespacesRequiredToUsePartially() as $namespace => $alias) {
-			if ($partialUse['namespace'] !== $namespace) {
+			if (strcasecmp($partialUse['namespace'], $namespace) !== 0) {
 				continue;
 			}
 
@@ -873,7 +873,7 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 		$allowedNamespaces = $this->getNamespacesAllowedToUsePartially();
 		if ($allowedNamespaces !== []) {
 			foreach ($allowedNamespaces as $namespace => $alias) {
-				if ($partialUse['namespace'] !== $namespace) {
+				if (strcasecmp($partialUse['namespace'], $namespace) !== 0) {
 					continue;
 				}
 

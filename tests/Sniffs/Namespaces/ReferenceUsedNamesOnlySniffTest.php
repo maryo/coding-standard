@@ -1504,6 +1504,43 @@ class ReferenceUsedNamesOnlySniffTest extends TestCase
 		self::assertAllFixedInFile($report);
 	}
 
+	public function testRequirePartialUsesIsCaseInsensitiveForNamespaces(): void
+	{
+		$report = self::checkFile(
+			__DIR__ . '/data/referenceUsedNamesOnlyWithRequiredPartialUseBypassedByNameUse.php',
+			[
+				'allowPartialUses' => false,
+				'namespacesRequiredToUsePartially' => [
+					'some\subnamespace as SubNamespace',
+				],
+			],
+		);
+
+		self::assertSame(4, $report->getErrorCount());
+
+		self::assertSniffError(
+			$report,
+			17,
+			ReferenceUsedNamesOnlySniff::CODE_PARTIAL_USE,
+			'Some\SubNamespace\A should be referenced via partial use as SubNamespace\A, but referencing A found.',
+		);
+	}
+
+	public function testRequirePartialUsesIsCaseInsensitiveForReferences(): void
+	{
+		$report = self::checkFile(
+			__DIR__ . '/data/referenceUsedNamesOnlyWithRequiredPartialUseInDifferentCase.php',
+			[
+				'allowPartialUses' => false,
+				'namespacesRequiredToUsePartially' => [
+					'Some\SubNamespace as SubNamespace',
+				],
+			],
+		);
+
+		self::assertNoSniffErrorInFile($report);
+	}
+
 	public function testRequirePartialUsesWithoutAliasAcceptsAnyAlias(): void
 	{
 		$report = self::checkFile(
