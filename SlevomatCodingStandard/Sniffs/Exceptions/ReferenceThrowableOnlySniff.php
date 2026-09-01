@@ -31,6 +31,8 @@ class ReferenceThrowableOnlySniff implements Sniff
 
 	private const NAME = 'SlevomatCodingStandard.Exceptions.ReferenceThrowableOnly';
 
+	public bool $fixable = true;
+
 	/**
 	 * @return array<int, (int|string)>
 	 */
@@ -92,12 +94,18 @@ class ReferenceThrowableOnlySniff implements Sniff
 				}
 			}
 
-			$fix = $phpcsFile->addFixableError(
+			$errorParameters = [
 				$message,
 				$referencedName->getStartPointer(),
 				self::CODE_REFERENCED_GENERAL_EXCEPTION,
-			);
-			if (!$fix) {
+			];
+
+			if (!$this->fixable) {
+				$phpcsFile->addError(...$errorParameters);
+				continue;
+			}
+
+			if (!$phpcsFile->addFixableError(...$errorParameters)) {
 				continue;
 			}
 
