@@ -46,6 +46,8 @@ use function strcasecmp;
 use function strlen;
 use function strtolower;
 use function substr;
+use function substr_count;
+use function uksort;
 use const T_DECLARE;
 use const T_DOC_COMMENT_OPEN_TAG;
 use const T_NAMESPACE;
@@ -719,6 +721,11 @@ class ReferenceUsedNamesOnlySniff implements Sniff
 
 			$normalizedSettings[NamespaceHelper::normalizeToCanonicalName($namespace)] = $alias;
 		}
+
+		uksort(
+			$normalizedSettings,
+			static fn (string $a, string $b): int => substr_count($b, '\\') <=> substr_count($a, '\\'),
+		);
 
 		return $normalizedSettings;
 	}
