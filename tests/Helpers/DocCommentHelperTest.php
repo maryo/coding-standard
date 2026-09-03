@@ -6,6 +6,8 @@ use PHP_CodeSniffer\Files\File;
 use function array_map;
 use function sprintf;
 use const T_DOC_COMMENT_OPEN_TAG;
+use const T_ENUM_CASE;
+use const T_VARIABLE;
 
 class DocCommentHelperTest extends TestCase
 {
@@ -370,6 +372,72 @@ class DocCommentHelperTest extends TestCase
 			DocCommentHelper::findDocCommentOwnerPointer(
 				$this->getTestedCodeSnifferFile(),
 				$this->findPointerByLineAndType($this->getTestedCodeSnifferFile(), 119, T_DOC_COMMENT_OPEN_TAG),
+			),
+		);
+	}
+
+	public function testGetOwnerWithCommentsBeforeOwner(): void
+	{
+		$phpcsFile = $this->getTestedCodeSnifferFile();
+
+		foreach ([141, 147, 159, 165] as $line) {
+			self::assertNotNull(
+				DocCommentHelper::findDocCommentOwnerPointer(
+					$phpcsFile,
+					$this->findPointerByLineAndType($phpcsFile, $line, T_DOC_COMMENT_OPEN_TAG),
+				),
+				sprintf('Failed asserting that doc comment on line %d has an owner.', $line),
+			);
+		}
+	}
+
+	public function testNoOwnerOfDocCommentBeforeStatement(): void
+	{
+		$phpcsFile = $this->getTestedCodeSnifferFile();
+
+		foreach ([174, 180, 190] as $line) {
+			self::assertNull(
+				DocCommentHelper::findDocCommentOwnerPointer(
+					$phpcsFile,
+					$this->findPointerByLineAndType($phpcsFile, $line, T_DOC_COMMENT_OPEN_TAG),
+				),
+				sprintf('Failed asserting that doc comment on line %d has no owner.', $line),
+			);
+		}
+	}
+
+	public function testGetOwnerOfVariableStatement(): void
+	{
+		$phpcsFile = $this->getTestedCodeSnifferFile();
+		$ownerPointer = DocCommentHelper::findDocCommentOwnerPointer(
+			$phpcsFile,
+			$this->findPointerByLineAndType($phpcsFile, 186, T_DOC_COMMENT_OPEN_TAG),
+		);
+
+		self::assertNotNull($ownerPointer);
+		self::assertSame(T_VARIABLE, $phpcsFile->getTokens()[$ownerPointer]['code']);
+	}
+
+	public function testGetOwnerOfEnumCase(): void
+	{
+		$phpcsFile = $this->getTestedCodeSnifferFile();
+		$ownerPointer = DocCommentHelper::findDocCommentOwnerPointer(
+			$phpcsFile,
+			$this->findPointerByLineAndType($phpcsFile, 197, T_DOC_COMMENT_OPEN_TAG),
+		);
+
+		self::assertNotNull($ownerPointer);
+		self::assertSame(T_ENUM_CASE, $phpcsFile->getTokens()[$ownerPointer]['code']);
+	}
+
+	public function testNoOwnerOfFileHeaderDocComment(): void
+	{
+		$phpcsFile = $this->getCodeSnifferFile(__DIR__ . '/data/docCommentFileHeader.php');
+
+		self::assertNull(
+			DocCommentHelper::findDocCommentOwnerPointer(
+				$phpcsFile,
+				$this->findPointerByLineAndType($phpcsFile, 3, T_DOC_COMMENT_OPEN_TAG),
 			),
 		);
 	}

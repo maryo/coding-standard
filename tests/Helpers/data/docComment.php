@@ -137,3 +137,64 @@ class WithInvalidDocComment
 	}
 
 }
+
+/** Doc comment before a line comment. */
+// Line comment.
+class WithDocCommentBeforeLineComment
+{
+}
+
+/** Doc comment before a block comment. */
+/*
+ * Block comment
+ * on multiple lines.
+ */
+class WithDocCommentBeforeBlockComment
+{
+}
+
+class WithDocCommentsBeforeStatements
+{
+
+	/** Doc comment before an ignore annotation. */
+	// phpcs:ignore Whatever.Anything
+	public function withIgnoreAnnotation(): void
+	{
+	}
+
+	/** Doc comment before an attribute and a comment. */
+	#[Attribute2]
+	// Comment after the attribute.
+	public function withAttributeAndComment(): void
+	{
+	}
+
+	public function withReturn(): void
+	{
+		/** Doc comment before a return. */
+		return;
+	}
+
+	public function withEcho(): void
+	{
+		/** Doc comment before an echo. */
+		echo 'whatever';
+	}
+
+	public function withVariableStatement(): void
+	{
+		/** Doc comment before a variable statement. */
+		$variable;
+	}
+
+	/** Dangling doc comment at the end of a class. */
+
+}
+
+enum WithEnumCase: string
+{
+
+	/** Doc comment of an enum case. */
+	case CASE_WITH_DOC_COMMENT = 'whatever';
+
+}
