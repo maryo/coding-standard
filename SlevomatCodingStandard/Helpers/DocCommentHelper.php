@@ -23,10 +23,13 @@ use const T_DOC_COMMENT_STAR;
 use const T_DOC_COMMENT_STRING;
 use const T_DOC_COMMENT_TAG;
 use const T_DOC_COMMENT_WHITESPACE;
+use const T_ENUM_CASE;
 use const T_FUNCTION;
+use const T_NULLABLE;
 use const T_OPEN_CURLY_BRACKET;
 use const T_SEMICOLON;
 use const T_VARIABLE;
+use const T_WHITESPACE;
 
 /**
  * @internal
@@ -176,19 +179,21 @@ class DocCommentHelper
 
 		$docCommentOwnerPointer = null;
 
-		$i = $docCommentOpenPointer;
+		$i = $tokens[$docCommentOpenPointer]['comment_closer'];
 		do {
-			$pointer = TokenHelper::findNext(
+			$pointer = TokenHelper::findNextExcluding(
 				$phpcsFile,
-				[T_ATTRIBUTE, T_DOC_COMMENT_OPEN_TAG, T_FUNCTION, T_VARIABLE, T_CONST, ...TokenHelper::CLASS_TYPE_TOKEN_CODES],
+				[
+					T_WHITESPACE,
+					T_NULLABLE,
+					...TokenHelper::INLINE_COMMENT_TOKEN_CODES,
+					...TokenHelper::MODIFIERS_TOKEN_CODES,
+					...TokenHelper::TYPE_HINT_TOKEN_CODES,
+				],
 				$i + 1,
 			);
 			if ($pointer === null) {
 				break;
-			}
-
-			if ($tokens[$pointer]['code'] === T_DOC_COMMENT_OPEN_TAG) {
-				return null;
 			}
 
 			if ($tokens[$pointer]['code'] === T_ATTRIBUTE) {
@@ -196,7 +201,14 @@ class DocCommentHelper
 				continue;
 			}
 
-			$docCommentOwnerPointer = $pointer;
+			if (in_array(
+				$tokens[$pointer]['code'],
+				[T_FUNCTION, T_VARIABLE, T_CONST, T_ENUM_CASE, ...TokenHelper::CLASS_TYPE_TOKEN_CODES],
+				true,
+			)) {
+				$docCommentOwnerPointer = $pointer;
+			}
+
 			break;
 
 		} while (true);
