@@ -3,12 +3,10 @@
 namespace SlevomatCodingStandard\Helpers;
 
 use PHP_CodeSniffer\Files\File;
-use PHP_CodeSniffer\Util\Tokens;
 use function array_key_exists;
 use function in_array;
 use function preg_match;
 use function strpos;
-use const T_COMMENT;
 
 /**
  * @internal
@@ -41,17 +39,15 @@ class CommentHelper
 		$commentEndPointer = $commentStartPointer;
 
 		for ($i = $commentStartPointer + 1; $i < $phpcsFile->numTokens; $i++) {
-			if ($tokens[$i]['code'] === T_COMMENT) {
-				$commentEndPointer = $i;
-				continue;
+			if (!in_array($tokens[$i]['code'], TokenHelper::INLINE_COMMENT_TOKEN_CODES, true)) {
+				break;
 			}
 
-			if (in_array($tokens[$i]['code'], Tokens::PHPCS_ANNOTATION_TOKENS, true)) {
-				$commentEndPointer = $i;
-				continue;
-			}
+			$commentEndPointer = $i;
 
-			break;
+			if (StringHelper::endsWith($tokens[$i]['content'], '*/')) {
+				break;
+			}
 		}
 
 		return $commentEndPointer;
